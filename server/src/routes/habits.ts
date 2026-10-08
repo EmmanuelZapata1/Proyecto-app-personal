@@ -7,14 +7,17 @@ export const habitsRouter = Router();
 
 habitsRouter.use(requireAuth);
 
-function today() {
+// El cliente envía su fecha local (YYYY-MM-DD) para que "hoy" respete su zona horaria.
+function dayFrom(value: unknown) {
+  const day = String(value || '');
+  if (/^\d{4}-\d{2}-\d{2}$/.test(day) && !Number.isNaN(new Date(`${day}T00:00:00Z`).getTime())) return day;
   const now = new Date();
   return `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, '0')}-${`${now.getDate()}`.padStart(2, '0')}`;
 }
 
 habitsRouter.get('/', async (req, res, next) => {
   try {
-    const day = today();
+    const day = dayFrom(req.query.day);
     const result = await pool.query<HabitRow & { done: boolean }>(
       `SELECT h.id, h.name, h.created_at, (c.habit_id IS NOT NULL) AS done
        FROM habits h
@@ -45,19 +48,14 @@ habitsRouter.post('/', async (req, res, next) => {
 
 habitsRouter.post('/:id/toggle', async (req, res, next) => {
   try {
-    const day = today();
-    const existing = await pool.query('SELECT habit_id FROM habit_completions WHERE habit_id = $1 AND day = $2', [
-      req.params.id,
-      day,
-    ]);
-    const doneToday = existing.rowCount === 0;
+    const day = dayFrom(req.body?.day);
+    const owned = await pool.query('SELECT id FROM habits WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+    if (!owned.rowCount) return res.status(404).json({ error: 'Ese hábito ya no existe.' });
+
+    const removed = await pool.query('DELETE FROM habit_completions WHERE habit_id = $1 AND day = $2', [req.params.id, day]);
+    const doneToday = removed.rowCount === 0;
     if (doneToday) {
-      await pool.query('INSERT INTO habit_completions (habit_id, day) VALUES ($1, $2) ON CONFLICT DO NOTHING', [
-        req.params.id,
-        day,
-      ]);
-    } else {
-      await pool.query('DELETE FROM habit_completions WHERE habit_id = $1 AND day = $2', [req.params.id, day]);
+      await pool.query('INSERT INTO habit_completions (habit_id, day) VALUES ($1, $2) ON CONFLICT DO NOTHING', [req.params.id, day]);
     }
     res.json({ id: req.params.id, doneToday });
   } catch (error) {

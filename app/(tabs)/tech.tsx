@@ -13,36 +13,84 @@ export default function TechScreen() {
   const [showForm, setShowForm] = useState(false);
   const upcoming = items.filter((item) => item.renewsOn).slice(0, 3);
 
-  return <Screen>
-    <PageTitle eyebrow="CENTRO TÉCNICO" title="Tech" />
+  return (
+    <Screen>
+      <PageTitle eyebrow="CENTRO TÉCNICO" title="Tech" />
 
-    <View style={styles.hero}>
-      <Text style={styles.heroLabel}>TU ECOSISTEMA</Text>
-      <Text style={styles.heroTitle}>Proyectos, equipos{`\n`}y renovaciones.</Text>
-      <Text style={styles.heroCopy}>Sin convertirlo en una consola empresarial.</Text>
-    </View>
+      <View style={styles.hero}>
+        <Text style={styles.heroLabel}>TU ECOSISTEMA</Text>
+        <Text style={styles.heroTitle}>Proyectos, equipos{`\n`}y renovaciones.</Text>
+        <Text style={styles.heroCopy}>Sin convertirlo en una consola empresarial.</Text>
+      </View>
 
-    <Section title="Vencimientos" action={upcoming.length ? `${upcoming.length}` : undefined}>
-      {upcoming.length ? upcoming.map((item) => <Renewal key={item.id} item={item} />) : <Text style={styles.muted}>Nada por vencer. Agrega una fecha y lo vigilarás aquí.</Text>}
-    </Section>
+      <Section title="Vencimientos" action={upcoming.length ? `${upcoming.length}` : undefined}>
+        {upcoming.length ? (
+          upcoming.map((item) => <Renewal key={item.id} item={item} />)
+        ) : (
+          <Text style={styles.muted}>Nada por vencer. Agrega una fecha y lo vigilarás aquí.</Text>
+        )}
+      </Section>
 
-    <Section title="Registros" action={items.length ? `${items.length}` : undefined}>
-      {!isReady ? <ActivityIndicator color={colors.moss} /> : items.length ? <View style={styles.list}>{items.map((item) => <InventoryRow key={item.id} item={item} />)}</View> : <Text style={styles.muted}>Sin registros todavía.</Text>}
-    </Section>
+      <Section title="Registros" action={items.length ? `${items.length}` : undefined}>
+        {!isReady ? (
+          <ActivityIndicator color={colors.moss} />
+        ) : items.length ? (
+          <View style={styles.list}>
+            {items.map((item) => (
+              <InventoryRow key={item.id} item={item} />
+            ))}
+          </View>
+        ) : (
+          <Text style={styles.muted}>Sin registros todavía.</Text>
+        )}
+      </Section>
 
-    {showForm ? <InventoryForm onCancel={() => setShowForm(false)} onSave={async (value) => { await createItem(value); setShowForm(false); }} /> : <AddButton label="Agregar registro" onPress={() => setShowForm(true)} />}
-  </Screen>;
+      {showForm ? (
+        <InventoryForm
+          onCancel={() => setShowForm(false)}
+          onSave={async (value) => {
+            await createItem(value);
+            setShowForm(false);
+          }}
+        />
+      ) : (
+        <AddButton label="Agregar registro" onPress={() => setShowForm(true)} />
+      )}
+    </Screen>
+  );
 }
 
 function Renewal({ item }: { item: InventoryItem }) {
   const days = daysUntil(item.renewsOn);
   const tone = days !== null && days <= 30 ? 'amber' : 'blue';
-  return <View style={styles.renewal}><View style={[styles.renewalIcon, { backgroundColor: tone === 'amber' ? colors.amberSoft : colors.blueSoft }]}><Ionicons name="time-outline" color={tone === 'amber' ? colors.amber : colors.blue} size={20} /></View><View style={styles.entryCopy}><Text style={styles.entryTitle}>{item.name}</Text><Text style={styles.entrySub}>{item.renewsOn}</Text></View><Pill label={days === null ? 'Sin fecha' : days <= 0 ? 'Vencido' : `${days} días`} tone={tone} /></View>;
+  return (
+    <View style={styles.renewal}>
+      <View style={[styles.renewalIcon, { backgroundColor: tone === 'amber' ? colors.amberSoft : colors.blueSoft }]}>
+        <Ionicons name="time-outline" color={tone === 'amber' ? colors.amber : colors.blue} size={20} />
+      </View>
+      <View style={styles.entryCopy}>
+        <Text style={styles.entryTitle}>{item.name}</Text>
+        <Text style={styles.entrySub}>{item.renewsOn}</Text>
+      </View>
+      <Pill label={days === null ? 'Sin fecha' : days <= 0 ? 'Vencido' : `${days} días`} tone={tone} />
+    </View>
+  );
 }
 
 function InventoryRow({ item }: { item: InventoryItem }) {
   const meta = kinds.find((option) => option.value === item.kind);
-  return <View style={styles.entry}><View style={styles.entryIcon}><Ionicons name={meta?.icon ?? 'pricetag-outline'} size={21} color={colors.ink} /></View><View style={styles.entryCopy}><Text style={styles.entryTitle}>{item.name}</Text><Text style={styles.entrySub}>{item.detail ?? labelFor(item.kind)}</Text></View><Pill label={labelFor(item.kind)} tone={toneFor(item.kind)} /></View>;
+  return (
+    <View style={styles.entry}>
+      <View style={styles.entryIcon}>
+        <Ionicons name={meta?.icon ?? 'pricetag-outline'} size={21} color={colors.ink} />
+      </View>
+      <View style={styles.entryCopy}>
+        <Text style={styles.entryTitle}>{item.name}</Text>
+        <Text style={styles.entrySub}>{item.detail ?? labelFor(item.kind)}</Text>
+      </View>
+      <Pill label={labelFor(item.kind)} tone={toneFor(item.kind)} />
+    </View>
+  );
 }
 
 function labelFor(kind: InventoryKind) {
@@ -68,9 +116,36 @@ const styles = StyleSheet.create({
   heroTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: '800', letterSpacing: -0.5, lineHeight: 33 },
   heroCopy: { color: '#DBEEF8', fontSize: 14, lineHeight: 20, maxWidth: 300 },
   list: { gap: 8 },
-  entry: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.line, borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 12, minHeight: 78, paddingHorizontal: 14 },
-  renewal: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.line, borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 12, minHeight: 72, paddingHorizontal: 14 },
-  entryIcon: { alignItems: 'center', backgroundColor: colors.background, borderRadius: 13, height: 44, justifyContent: 'center', width: 44 },
+  entry: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    minHeight: 78,
+    paddingHorizontal: 14,
+  },
+  renewal: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    minHeight: 72,
+    paddingHorizontal: 14,
+  },
+  entryIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderRadius: 13,
+    height: 44,
+    justifyContent: 'center',
+    width: 44,
+  },
   renewalIcon: { alignItems: 'center', borderRadius: 13, height: 44, justifyContent: 'center', width: 44 },
   entryCopy: { flex: 1, gap: 4 },
   entryTitle: { color: colors.ink, fontSize: 14, fontWeight: '800' },

@@ -20,7 +20,12 @@ export function HabitRow({ habit, onToggle, onRemove }: { habit: Habit; onToggle
         <Text style={[styles.name, habit.doneToday && styles.done]}>{habit.name}</Text>
         <Text style={styles.meta}>{habit.doneToday ? 'Completado hoy' : 'Pendiente'}</Text>
       </View>
-      <Pressable accessibilityLabel={`Eliminar ${habit.name}`} hitSlop={8} onPress={onRemove} style={({ pressed }) => [styles.remove, pressed && styles.pressed]}>
+      <Pressable
+        accessibilityLabel={`Eliminar ${habit.name}`}
+        hitSlop={8}
+        onPress={onRemove}
+        style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
+      >
         <Ionicons name="trash-outline" color={colors.muted} size={19} />
       </Pressable>
     </View>
@@ -28,8 +33,26 @@ export function HabitRow({ habit, onToggle, onRemove }: { habit: Habit; onToggle
 }
 
 const styles = StyleSheet.create({
-  row: { alignItems: 'center', backgroundColor: colors.surface, borderColor: colors.line, borderRadius: 14, borderWidth: 1, flexDirection: 'row', gap: 12, minHeight: 72, paddingHorizontal: 14 },
-  check: { alignItems: 'center', borderColor: colors.moss, borderRadius: 12, borderWidth: 2, height: 28, justifyContent: 'center', width: 28 },
+  row: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    gap: 12,
+    minHeight: 72,
+    paddingHorizontal: 14,
+  },
+  check: {
+    alignItems: 'center',
+    borderColor: colors.moss,
+    borderRadius: 12,
+    borderWidth: 2,
+    height: 28,
+    justifyContent: 'center',
+    width: 28,
+  },
   checked: { backgroundColor: colors.moss },
   copy: { flex: 1, gap: 4 },
   name: { color: colors.ink, fontSize: 15, fontWeight: '700' },

@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -6,7 +7,7 @@ import { colors } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 
 export default function SignInScreen() {
-  const { login, register, isAuthenticating, error } = useSession();
+  const { email: sessionEmail, login, register, isAuthenticating, error } = useSession();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,20 +29,32 @@ export default function SignInScreen() {
     }
   }
 
+  if (sessionEmail) return <Redirect href="/(tabs)" />;
+
   return (
     <View style={styles.screen}>
       <View style={styles.hero}>
-        <View style={styles.badge}><Ionicons name="cube-outline" color={colors.moss} size={20} /></View>
+        <View style={styles.badge}>
+          <Ionicons name="cube-outline" color={colors.moss} size={20} />
+        </View>
         <Text style={styles.title}>Nexo</Text>
         <Text style={styles.subtitle}>Tu centro de mando personal. Entra para sincronizar tus datos.</Text>
       </View>
 
       <View style={styles.card}>
         <View style={styles.modes}>
-          <Pressable accessibilityRole="button" onPress={() => setMode('login')} style={[styles.mode, mode === 'login' && styles.modeActive]}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setMode('login')}
+            style={[styles.mode, mode === 'login' && styles.modeActive]}
+          >
             <Text style={[styles.modeText, mode === 'login' && styles.modeTextActive]}>Entrar</Text>
           </Pressable>
-          <Pressable accessibilityRole="button" onPress={() => setMode('register')} style={[styles.mode, mode === 'register' && styles.modeActive]}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setMode('register')}
+            style={[styles.mode, mode === 'register' && styles.modeActive]}
+          >
             <Text style={[styles.modeText, mode === 'register' && styles.modeTextActive]}>Crear cuenta</Text>
           </Pressable>
         </View>
@@ -50,14 +63,20 @@ export default function SignInScreen() {
           autoCapitalize="none"
           autoComplete="email"
           keyboardType="email-address"
-          onChangeText={(value) => { setEmail(value); setLocalError(null); }}
+          onChangeText={(value) => {
+            setEmail(value);
+            setLocalError(null);
+          }}
           placeholder="correo@ejemplo.com"
           placeholderTextColor={colors.muted}
           style={styles.input}
           value={email}
         />
         <TextInput
-          onChangeText={(value) => { setPassword(value); setLocalError(null); }}
+          onChangeText={(value) => {
+            setPassword(value);
+            setLocalError(null);
+          }}
           onSubmitEditing={() => void submit()}
           placeholder="contraseña"
           placeholderTextColor={colors.muted}
@@ -66,10 +85,23 @@ export default function SignInScreen() {
           value={password}
         />
 
-        {(localError || error) ? <Text accessibilityLiveRegion="polite" style={styles.error}>{localError || error}</Text> : null}
+        {localError || error ? (
+          <Text accessibilityLiveRegion="polite" style={styles.error}>
+            {localError || error}
+          </Text>
+        ) : null}
 
-        <Pressable accessibilityLabel={isRegister ? 'Crear cuenta' : 'Entrar'} disabled={isAuthenticating} onPress={() => void submit()} style={[styles.submit, isAuthenticating && styles.submitDisabled]}>
-          {isAuthenticating ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.submitText}>{isRegister ? 'Crear cuenta' : 'Entrar'}</Text>}
+        <Pressable
+          accessibilityLabel={isRegister ? 'Crear cuenta' : 'Entrar'}
+          disabled={isAuthenticating}
+          onPress={() => void submit()}
+          style={[styles.submit, isAuthenticating && styles.submitDisabled]}
+        >
+          {isAuthenticating ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.submitText}>{isRegister ? 'Crear cuenta' : 'Entrar'}</Text>
+          )}
         </Pressable>
       </View>
 
@@ -90,7 +122,16 @@ const styles = StyleSheet.create({
   modeActive: { backgroundColor: colors.surface },
   modeText: { color: colors.muted, fontSize: 13, fontWeight: '700' },
   modeTextActive: { color: colors.ink },
-  input: { backgroundColor: colors.background, borderColor: colors.line, borderRadius: 12, borderWidth: 1, color: colors.ink, fontSize: 15, minHeight: 50, paddingHorizontal: 13 },
+  input: {
+    backgroundColor: colors.background,
+    borderColor: colors.line,
+    borderRadius: 12,
+    borderWidth: 1,
+    color: colors.ink,
+    fontSize: 15,
+    minHeight: 50,
+    paddingHorizontal: 13,
+  },
   error: { color: colors.danger, fontSize: 12, fontWeight: '600' },
   submit: { alignItems: 'center', backgroundColor: colors.moss, borderRadius: 12, justifyContent: 'center', minHeight: 50 },
   submitDisabled: { opacity: 0.7 },
