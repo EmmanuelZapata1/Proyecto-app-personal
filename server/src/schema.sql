@@ -1,0 +1,52 @@
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  tag TEXT NOT NULL,
+  due_at TIMESTAMPTZ,
+  completed BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS habits (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS habit_completions (
+  habit_id TEXT NOT NULL REFERENCES habits(id) ON DELETE CASCADE,
+  day DATE NOT NULL,
+  PRIMARY KEY (habit_id, day)
+);
+
+CREATE TABLE IF NOT EXISTS notes (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS inventory (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  name TEXT NOT NULL,
+  detail TEXT,
+  renews_on DATE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS tasks_user ON tasks (user_id, completed);
+CREATE INDEX IF NOT EXISTS habits_user ON habits (user_id);
+CREATE INDEX IF NOT EXISTS notes_user ON notes (user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS inventory_user ON inventory (user_id, renews_on);
