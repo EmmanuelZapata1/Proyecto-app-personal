@@ -1,7 +1,7 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useSession } from '@/contexts/session';
-import { apiRequest, getToken } from '@/lib/api';
+import { apiRequest } from '@/lib/api';
 
 export type PersonalTask = {
   id: string;
@@ -30,30 +30,26 @@ export function TasksProvider({ children }: PropsWithChildren) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTasks = useCallback(async () => {
-    try {
-      const requestToken = getToken();
-      const result = await apiRequest<{ tasks: PersonalTask[] }>('/api/tasks');
-      // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
-      if (getToken() !== requestToken) return;
-      setTasks(result.tasks);
-      setError(null);
-    } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'No pudimos cargar tus tareas.');
-    } finally {
-      setIsReady(true);
-    }
-  }, []);
-
+  // El layout remonta este proveedor cuando cambia la sesión, así que no hay estado viejo que limpiar.
   useEffect(() => {
-    if (!email) {
-      setTasks([]);
-      setError(null);
-      setIsReady(false);
-      return;
-    }
-    void loadTasks();
-  }, [email, loadTasks]);
+    if (!email) return;
+    let active = true;
+    apiRequest<{ tasks: PersonalTask[] }>('/api/tasks')
+      .then((result) => {
+        if (!active) return;
+        setTasks(result.tasks);
+        setError(null);
+      })
+      .catch((exception: unknown) => {
+        if (active) setError(exception instanceof Error ? exception.message : 'No pudimos cargar tus tareas.');
+      })
+      .finally(() => {
+        if (active) setIsReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [email]);
 
   const createTask = useCallback(async ({ title, tag }: NewTask) => {
     const trimmedTitle = title.trim();

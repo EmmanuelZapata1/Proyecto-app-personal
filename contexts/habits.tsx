@@ -1,7 +1,7 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useSession } from '@/contexts/session';
-import { apiRequest, getToken } from '@/lib/api';
+import { apiRequest } from '@/lib/api';
 
 export type Habit = {
   id: string;
@@ -32,30 +32,26 @@ export function HabitsProvider({ children }: PropsWithChildren) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadHabits = useCallback(async () => {
-    try {
-      const requestToken = getToken();
-      const result = await apiRequest<{ habits: Habit[] }>(`/api/habits?day=${localDay()}`);
-      // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
-      if (getToken() !== requestToken) return;
-      setHabits(result.habits);
-      setError(null);
-    } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'No pudimos cargar tus hábitos.');
-    } finally {
-      setIsReady(true);
-    }
-  }, []);
-
+  // El layout remonta este proveedor cuando cambia la sesión, así que no hay estado viejo que limpiar.
   useEffect(() => {
-    if (!email) {
-      setHabits([]);
-      setError(null);
-      setIsReady(false);
-      return;
-    }
-    void loadHabits();
-  }, [email, loadHabits]);
+    if (!email) return;
+    let active = true;
+    apiRequest<{ habits: Habit[] }>(`/api/habits?day=${localDay()}`)
+      .then((result) => {
+        if (!active) return;
+        setHabits(result.habits);
+        setError(null);
+      })
+      .catch((exception: unknown) => {
+        if (active) setError(exception instanceof Error ? exception.message : 'No pudimos cargar tus hábitos.');
+      })
+      .finally(() => {
+        if (active) setIsReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [email]);
 
   const createHabit = useCallback(async (name: string) => {
     const trimmedName = name.trim();

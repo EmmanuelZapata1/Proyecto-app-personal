@@ -15,15 +15,13 @@ import { useTasks } from '@/contexts/tasks';
 export default function TodayScreen() {
   const { tasks, isReady, toggleTask } = useTasks();
   const { habits } = useHabits();
-  const { articles } = useNews();
+  const { recentCount } = useNews();
   const [showComposer, setShowComposer] = useState(false);
   const today = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'long', weekday: 'long' })
     .format(new Date())
     .toUpperCase();
   const completed = tasks.filter((task) => task.completed).length;
   const habitsDone = habits.filter((habit) => habit.doneToday).length;
-  const dayAgo = Date.now() - 86400000;
-  const recentNews = articles.filter((article) => article.publishedAt && new Date(article.publishedAt).getTime() >= dayAgo).length;
 
   return <Screen>
     <PageTitle eyebrow={today} title="Buen día" />
@@ -42,7 +40,7 @@ export default function TodayScreen() {
     <Section title="Un vistazo">
       <View style={styles.glanceGrid}>
         <View style={[styles.glance, { backgroundColor: colors.mossSoft }]}><Ionicons name="leaf-outline" size={22} color={colors.moss} /><Text style={styles.glanceNumber}>{habits.length ? `${habitsDone}/${habits.length}` : '0'}</Text><Text style={styles.glanceLabel}>hábitos</Text></View>
-        <View style={[styles.glance, { backgroundColor: colors.blueSoft }]}><Ionicons name="newspaper-outline" size={22} color={colors.blue} /><Text style={styles.glanceNumber}>{recentNews}</Text><Text style={styles.glanceLabel}>noticias en 24 h</Text></View>
+        <View style={[styles.glance, { backgroundColor: colors.blueSoft }]}><Ionicons name="newspaper-outline" size={22} color={colors.blue} /><Text style={styles.glanceNumber}>{recentCount}</Text><Text style={styles.glanceLabel}>noticias en 24 h</Text></View>
       </View>
     </Section>
   </Screen>;

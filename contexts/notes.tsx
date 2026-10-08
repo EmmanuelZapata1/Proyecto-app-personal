@@ -1,7 +1,7 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { useSession } from '@/contexts/session';
-import { apiRequest, getToken } from '@/lib/api';
+import { apiRequest } from '@/lib/api';
 
 export type Note = {
   id: string;
@@ -27,30 +27,26 @@ export function NotesProvider({ children }: PropsWithChildren) {
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadNotes = useCallback(async () => {
-    try {
-      const requestToken = getToken();
-      const result = await apiRequest<{ notes: Note[] }>('/api/notes');
-      // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
-      if (getToken() !== requestToken) return;
-      setNotes(result.notes);
-      setError(null);
-    } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'No pudimos cargar tus notas.');
-    } finally {
-      setIsReady(true);
-    }
-  }, []);
-
+  // El layout remonta este proveedor cuando cambia la sesión, así que no hay estado viejo que limpiar.
   useEffect(() => {
-    if (!email) {
-      setNotes([]);
-      setError(null);
-      setIsReady(false);
-      return;
-    }
-    void loadNotes();
-  }, [email, loadNotes]);
+    if (!email) return;
+    let active = true;
+    apiRequest<{ notes: Note[] }>('/api/notes')
+      .then((result) => {
+        if (!active) return;
+        setNotes(result.notes);
+        setError(null);
+      })
+      .catch((exception: unknown) => {
+        if (active) setError(exception instanceof Error ? exception.message : 'No pudimos cargar tus notas.');
+      })
+      .finally(() => {
+        if (active) setIsReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [email]);
 
   const createNote = useCallback(async (body: string) => {
     const trimmedBody = body.trim();
