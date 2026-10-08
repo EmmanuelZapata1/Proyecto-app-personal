@@ -18,6 +18,12 @@ type HabitsContextValue = {
   removeHabit: (id: string) => Promise<void>;
 };
 
+// Fecha local del dispositivo; el servidor la usa para decidir qué es "hoy".
+function localDay() {
+  const now = new Date();
+  return `${now.getFullYear()}-${`${now.getMonth() + 1}`.padStart(2, '0')}-${`${now.getDate()}`.padStart(2, '0')}`;
+}
+
 const HabitsContext = createContext<HabitsContextValue | undefined>(undefined);
 
 export function HabitsProvider({ children }: PropsWithChildren) {
@@ -29,7 +35,7 @@ export function HabitsProvider({ children }: PropsWithChildren) {
   const loadHabits = useCallback(async () => {
     try {
       const requestToken = getToken();
-      const result = await apiRequest<{ habits: Habit[] }>('/api/habits');
+      const result = await apiRequest<{ habits: Habit[] }>(`/api/habits?day=${localDay()}`);
       // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
       if (getToken() !== requestToken) return;
       setHabits(result.habits);
@@ -64,7 +70,7 @@ export function HabitsProvider({ children }: PropsWithChildren) {
     const doneToday = !habit.doneToday;
     setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday } : item)));
     try {
-      const result = await apiRequest<{ id: string; doneToday: boolean }>(`/api/habits/${id}/toggle`, { method: 'POST' });
+      const result = await apiRequest<{ id: string; doneToday: boolean }>(`/api/habits/${id}/toggle`, { method: 'POST', body: { day: localDay() } });
       setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday: result.doneToday } : item)));
     } catch (exception) {
       setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday: !doneToday } : item)));
