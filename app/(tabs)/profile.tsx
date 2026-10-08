@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '@/components/Screen';
 import { PageTitle, Section } from '@/components/ui';
@@ -11,6 +11,24 @@ import { useSession } from '@/contexts/session';
 export default function ProfileScreen() {
   const { email, logout } = useSession();
   const initial = (email || 'T')[0].toUpperCase();
+
+  function exit() {
+    logout();
+    router.replace('/sign-in');
+  }
+
+  // Alert.alert no hace nada en react-native-web, así que en web usamos el diálogo del navegador.
+  function confirmLogout() {
+    const message = 'Volverás a la pantalla de acceso. Tus datos quedan guardados en el servidor.';
+    if (Platform.OS === 'web') {
+      if (globalThis.confirm?.(`Cerrar sesión\n\n${message}`)) exit();
+      return;
+    }
+    Alert.alert('Cerrar sesión', message, [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Salir', style: 'destructive', onPress: exit },
+    ]);
+  }
 
   return (
     <Screen>
@@ -30,22 +48,7 @@ export default function ProfileScreen() {
         </View>
       </Section>
       <Section title="Cuenta">
-        <Pressable
-          onPress={() =>
-            Alert.alert('Cerrar sesión', 'Volverás a la pantalla de acceso. Tus datos quedan guardados en el servidor.', [
-              { text: 'Cancelar', style: 'cancel' },
-              {
-                text: 'Salir',
-                style: 'destructive',
-                onPress: () => {
-                  logout();
-                  router.replace('/sign-in');
-                },
-              },
-            ])
-          }
-          style={({ pressed }) => [styles.dataRow, pressed && styles.pressed]}
-        >
+        <Pressable onPress={confirmLogout} style={({ pressed }) => [styles.dataRow, pressed && styles.pressed]}>
           <Ionicons name="log-out-outline" color={colors.danger} size={21} />
           <Text style={[styles.dataText, { color: colors.danger }]}>Cerrar sesión</Text>
         </Pressable>
