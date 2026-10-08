@@ -8,8 +8,9 @@ export function PageTitle({ eyebrow, title, action }: { eyebrow?: string; title:
   return <View style={styles.titleRow}><View style={styles.titleBlock}>{eyebrow && <Text style={styles.eyebrow}>{eyebrow}</Text>}<Text style={styles.pageTitle}>{title}</Text></View>{action}</View>;
 }
 
-export function Section({ title, action, children }: PropsWithChildren<{ title: string; action?: string }>) {
-  return <View style={styles.section}><View style={styles.sectionHeading}><Text style={styles.sectionTitle}>{title}</Text>{action && <Text style={styles.sectionAction}>{action}</Text>}</View>{children}</View>;
+export function Section({ title, action, onAction, children }: PropsWithChildren<{ title: string; action?: string; onAction?: () => void }>) {
+  const label = action && (onAction ? <Pressable accessibilityRole="button" hitSlop={8} onPress={onAction}><Text style={styles.sectionAction}>{action}</Text></Pressable> : <Text style={styles.sectionAction}>{action}</Text>);
+  return <View style={styles.section}><View style={styles.sectionHeading}><Text style={styles.sectionTitle}>{title}</Text>{label}</View>{children}</View>;
 }
 
 export function IconButton({ icon, label, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; onPress?: () => void }) {

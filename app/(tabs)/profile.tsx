@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Screen } from '@/components/Screen';
 import { PageTitle, Section } from '@/components/ui';
@@ -15,7 +15,7 @@ export default function ProfileScreen() {
   return <Screen>
     <PageTitle title="Perfil" />
     <View style={styles.identity}><View style={styles.avatar}><Text style={styles.avatarText}>{initial}</Text></View><View style={styles.identityCopy}><Text style={styles.identityTitle}>{email || 'Sin sesión'}</Text><Text style={styles.identityText}>Sincronizado con tu servidor</Text></View></View>
-    <Section title="Preferencias"><View style={styles.settings}><Setting icon="notifications-outline" title="Recordatorios" accessory={<Switch value onValueChange={() => {}} trackColor={{ true: '#84A994' }} />} /><Setting icon="moon-outline" title="Tema del sistema" accessory={<Text style={styles.accessory}>Automático</Text>} /></View></Section>
+    <Section title="Preferencias"><View style={styles.settings}><Setting icon="moon-outline" title="Tema del sistema" accessory={<Text style={styles.accessory}>Automático</Text>} /></View></Section>
     <Section title="Cuenta">
       <Pressable
         onPress={() => Alert.alert('Cerrar sesión', 'Volverás a la pantalla de acceso. Tus datos quedan guardados en el servidor.', [
