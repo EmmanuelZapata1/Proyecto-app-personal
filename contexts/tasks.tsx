@@ -1,6 +1,7 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { apiRequest } from '@/lib/api';
+import { useSession } from '@/contexts/session';
+import { apiRequest, getToken } from '@/lib/api';
 
 export type PersonalTask = {
   id: string;
@@ -24,13 +25,17 @@ type TasksContextValue = {
 const TasksContext = createContext<TasksContextValue | undefined>(undefined);
 
 export function TasksProvider({ children }: PropsWithChildren) {
+  const { email } = useSession();
   const [tasks, setTasks] = useState<PersonalTask[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadTasks = useCallback(async () => {
     try {
+      const requestToken = getToken();
       const result = await apiRequest<{ tasks: PersonalTask[] }>('/api/tasks');
+      // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
+      if (getToken() !== requestToken) return;
       setTasks(result.tasks);
       setError(null);
     } catch (exception) {
@@ -41,8 +46,14 @@ export function TasksProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
+    if (!email) {
+      setTasks([]);
+      setError(null);
+      setIsReady(false);
+      return;
+    }
     void loadTasks();
-  }, [loadTasks]);
+  }, [email, loadTasks]);
 
   const createTask = useCallback(async ({ title, tag }: NewTask) => {
     const trimmedTitle = title.trim();

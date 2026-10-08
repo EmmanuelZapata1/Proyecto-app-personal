@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 
 import { colors } from '@/constants/theme';
+import { useSession } from '@/contexts/session';
 
 const iconByRoute: Record<string, keyof typeof Ionicons.glyphMap> = {
   index: 'today-outline',
@@ -12,6 +13,11 @@ const iconByRoute: Record<string, keyof typeof Ionicons.glyphMap> = {
 };
 
 export default function TabLayout() {
+  const { email, isReady } = useSession();
+
+  // Si la sesión se cierra o expira, volvemos al acceso.
+  if (isReady && !email) return <Redirect href="/sign-in" />;
+
   return (
     <Tabs
       screenOptions={({ route }) => ({

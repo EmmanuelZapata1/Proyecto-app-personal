@@ -1,6 +1,7 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { apiRequest } from '@/lib/api';
+import { useSession } from '@/contexts/session';
+import { apiRequest, getToken } from '@/lib/api';
 
 export type Habit = {
   id: string;
@@ -20,13 +21,17 @@ type HabitsContextValue = {
 const HabitsContext = createContext<HabitsContextValue | undefined>(undefined);
 
 export function HabitsProvider({ children }: PropsWithChildren) {
+  const { email } = useSession();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadHabits = useCallback(async () => {
     try {
+      const requestToken = getToken();
       const result = await apiRequest<{ habits: Habit[] }>('/api/habits');
+      // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
+      if (getToken() !== requestToken) return;
       setHabits(result.habits);
       setError(null);
     } catch (exception) {
@@ -37,8 +42,14 @@ export function HabitsProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
+    if (!email) {
+      setHabits([]);
+      setError(null);
+      setIsReady(false);
+      return;
+    }
     void loadHabits();
-  }, [loadHabits]);
+  }, [email, loadHabits]);
 
   const createHabit = useCallback(async (name: string) => {
     const trimmedName = name.trim();

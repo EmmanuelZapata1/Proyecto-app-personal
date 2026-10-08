@@ -1,6 +1,7 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { apiRequest } from '@/lib/api';
+import { useSession } from '@/contexts/session';
+import { apiRequest, getToken } from '@/lib/api';
 
 export type InventoryKind = 'proyecto' | 'hardware' | 'software' | 'servicio';
 
@@ -26,13 +27,17 @@ type InventoryContextValue = {
 const InventoryContext = createContext<InventoryContextValue | undefined>(undefined);
 
 export function InventoryProvider({ children }: PropsWithChildren) {
+  const { email } = useSession();
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadItems = useCallback(async () => {
     try {
+      const requestToken = getToken();
       const result = await apiRequest<{ items: InventoryItem[] }>('/api/inventory');
+      // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
+      if (getToken() !== requestToken) return;
       setItems(result.items);
       setError(null);
     } catch (exception) {
@@ -43,8 +48,14 @@ export function InventoryProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
+    if (!email) {
+      setItems([]);
+      setError(null);
+      setIsReady(false);
+      return;
+    }
     void loadItems();
-  }, [loadItems]);
+  }, [email, loadItems]);
 
   const createItem = useCallback(async ({ kind, name, detail, renewsOn }: NewInventoryItem) => {
     const trimmedName = name.trim();

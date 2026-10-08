@@ -1,6 +1,6 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { apiRequest, restoreToken, setToken, ApiError } from '@/lib/api';
+import { ApiError, apiRequest, restoreToken, setToken, setUnauthorizedHandler } from '@/lib/api';
 
 type SessionValue = {
   email: string | null;
@@ -21,22 +21,25 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = restoreToken();
-    if (!stored) {
-      setIsReady(true);
-      return;
-    }
+    setUnauthorizedHandler(() => setEmail(null));
+    let active = true;
     void (async () => {
       try {
+        const stored = await restoreToken();
+        if (!stored) return;
         const result = await apiRequest<{ user: { email: string } }>('/api/me');
-        setEmail(result.user.email);
+        if (active) setEmail(result.user.email);
       } catch (exception) {
-        if (!(exception instanceof ApiError) || exception.status !== 401) setError('No pudimos conectar con el servidor.');
-        setToken(null);
+        // Sin conexión conservamos el token para reintentar en la próxima apertura.
+        if (active && (!(exception instanceof ApiError) || exception.status !== 401)) setError('No pudimos conectar con el servidor.');
       } finally {
-        setIsReady(true);
+        if (active) setIsReady(true);
       }
     })();
+    return () => {
+      active = false;
+      setUnauthorizedHandler(null);
+    };
   }, []);
 
   const authenticate = useCallback(async (path: '/auth/login' | '/auth/register', currentEmail: string, password: string) => {

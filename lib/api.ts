@@ -1,7 +1,10 @@
+import { readSecure, writeSecure } from '@/lib/storage';
+
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8080').replace(/\/$/, '');
 const TOKEN_KEY = 'nexo.session';
 
 let token: string | null = null;
+let onUnauthorized: (() => void) | null = null;
 
 export function getToken() {
   return token;
@@ -9,20 +12,18 @@ export function getToken() {
 
 export function setToken(next: string | null) {
   token = next;
-  if (next) {
-    globalThis.localStorage?.setItem(TOKEN_KEY, next);
-  } else {
-    globalThis.localStorage?.removeItem(TOKEN_KEY);
-  }
+  void writeSecure(TOKEN_KEY, next).catch(() => undefined);
 }
 
-export function restoreToken() {
-  const stored = globalThis.localStorage?.getItem(TOKEN_KEY) || null;
-  if (stored) {
-    token = stored;
-    return stored;
-  }
-  return null;
+export async function restoreToken() {
+  const stored = await readSecure(TOKEN_KEY).catch(() => null);
+  token = stored || null;
+  return token;
+}
+
+// La sesión se registra aquí para enterarse cuando el servidor rechaza el token.
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
 }
 
 export class ApiError extends Error {
@@ -36,7 +37,8 @@ export class ApiError extends Error {
 
 export async function apiRequest<T>(path: string, options: { method?: string; body?: unknown; auth?: boolean } = {}): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (options.auth !== false && token) headers.Authorization = `Bearer ${token}`;
+  const sentToken = options.auth !== false ? token : null;
+  if (sentToken) headers.Authorization = `Bearer ${sentToken}`;
 
   let response: Response;
   try {
@@ -53,7 +55,11 @@ export async function apiRequest<T>(path: string, options: { method?: string; bo
 
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    if (response.status === 401 && options.auth !== false) setToken(null);
+    // Solo cerramos la sesión si se rechazó el token vigente, no uno viejo o una petición sin token.
+    if (response.status === 401 && sentToken && sentToken === token) {
+      setToken(null);
+      onUnauthorized?.();
+    }
     throw new ApiError(response.status, (payload && payload.error) || 'Algo salió mal. Inténtalo otra vez.');
   }
   return payload as T;

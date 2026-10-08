@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -6,7 +7,7 @@ import { colors } from '@/constants/theme';
 import { useSession } from '@/contexts/session';
 
 export default function SignInScreen() {
-  const { login, register, isAuthenticating, error } = useSession();
+  const { email: sessionEmail, login, register, isAuthenticating, error } = useSession();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,6 +28,8 @@ export default function SignInScreen() {
       return;
     }
   }
+
+  if (sessionEmail) return <Redirect href="/(tabs)" />;
 
   return (
     <View style={styles.screen}>

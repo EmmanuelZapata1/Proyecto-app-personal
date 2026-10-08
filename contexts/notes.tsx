@@ -1,6 +1,7 @@
 import { PropsWithChildren, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { apiRequest } from '@/lib/api';
+import { useSession } from '@/contexts/session';
+import { apiRequest, getToken } from '@/lib/api';
 
 export type Note = {
   id: string;
@@ -21,13 +22,17 @@ type NotesContextValue = {
 const NotesContext = createContext<NotesContextValue | undefined>(undefined);
 
 export function NotesProvider({ children }: PropsWithChildren) {
+  const { email } = useSession();
   const [notes, setNotes] = useState<Note[]>([]);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadNotes = useCallback(async () => {
     try {
+      const requestToken = getToken();
       const result = await apiRequest<{ notes: Note[] }>('/api/notes');
+      // Si la sesión cambió mientras llegaba la respuesta, la descartamos.
+      if (getToken() !== requestToken) return;
       setNotes(result.notes);
       setError(null);
     } catch (exception) {
@@ -38,8 +43,14 @@ export function NotesProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
+    if (!email) {
+      setNotes([]);
+      setError(null);
+      setIsReady(false);
+      return;
+    }
     void loadNotes();
-  }, [loadNotes]);
+  }, [email, loadNotes]);
 
   const createNote = useCallback(async (body: string) => {
     const trimmedBody = body.trim();
