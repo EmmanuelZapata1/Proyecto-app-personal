@@ -43,4 +43,3 @@ No existing product assets, production data, or visual identity are available. D
 2. Capture information faster than opening a separate app.
 3. Work offline by default and keep personal data understandable.
 4. Treat technical information as practical life context, not enterprise administration.
-

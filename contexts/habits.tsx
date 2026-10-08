@@ -60,30 +60,39 @@ export function HabitsProvider({ children }: PropsWithChildren) {
     setHabits((current) => [...current, result.habit]);
   }, []);
 
-  const toggleHabit = useCallback(async (id: string) => {
-    const habit = habits.find((item) => item.id === id);
-    if (!habit) return;
-    const doneToday = !habit.doneToday;
-    setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday } : item)));
-    try {
-      const result = await apiRequest<{ id: string; doneToday: boolean }>(`/api/habits/${id}/toggle`, { method: 'POST', body: { day: localDay() } });
-      setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday: result.doneToday } : item)));
-    } catch (exception) {
-      setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday: !doneToday } : item)));
-      throw exception;
-    }
-  }, [habits]);
+  const toggleHabit = useCallback(
+    async (id: string) => {
+      const habit = habits.find((item) => item.id === id);
+      if (!habit) return;
+      const doneToday = !habit.doneToday;
+      setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday } : item)));
+      try {
+        const result = await apiRequest<{ id: string; doneToday: boolean }>(`/api/habits/${id}/toggle`, {
+          method: 'POST',
+          body: { day: localDay() },
+        });
+        setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday: result.doneToday } : item)));
+      } catch (exception) {
+        setHabits((current) => current.map((item) => (item.id === id ? { ...item, doneToday: !doneToday } : item)));
+        throw exception;
+      }
+    },
+    [habits],
+  );
 
-  const removeHabit = useCallback(async (id: string) => {
-    const previous = habits;
-    setHabits((current) => current.filter((item) => item.id !== id));
-    try {
-      await apiRequest(`/api/habits/${id}`, { method: 'DELETE' });
-    } catch (exception) {
-      setHabits(previous);
-      throw exception;
-    }
-  }, [habits]);
+  const removeHabit = useCallback(
+    async (id: string) => {
+      const previous = habits;
+      setHabits((current) => current.filter((item) => item.id !== id));
+      try {
+        await apiRequest(`/api/habits/${id}`, { method: 'DELETE' });
+      } catch (exception) {
+        setHabits(previous);
+        throw exception;
+      }
+    },
+    [habits],
+  );
 
   const value = useMemo(
     () => ({ habits, isReady, error, createHabit, toggleHabit, removeHabit }),

@@ -55,10 +55,7 @@ habitsRouter.post('/:id/toggle', async (req, res, next) => {
     const removed = await pool.query('DELETE FROM habit_completions WHERE habit_id = $1 AND day = $2', [req.params.id, day]);
     const doneToday = removed.rowCount === 0;
     if (doneToday) {
-      await pool.query('INSERT INTO habit_completions (habit_id, day) VALUES ($1, $2) ON CONFLICT DO NOTHING', [
-        req.params.id,
-        day,
-      ]);
+      await pool.query('INSERT INTO habit_completions (habit_id, day) VALUES ($1, $2) ON CONFLICT DO NOTHING', [req.params.id, day]);
     }
     res.json({ id: req.params.id, doneToday });
   } catch (error) {

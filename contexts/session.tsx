@@ -42,28 +42,37 @@ export function SessionProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  const authenticate = useCallback(async (path: '/auth/login' | '/auth/register', currentEmail: string, password: string) => {
-    if (isAuthenticating) return;
-    setIsAuthenticating(true);
-    setError(null);
-    try {
-      const result = await apiRequest<{ token: string; user: { email: string } }>(path, {
-        method: 'POST',
-        body: { email: currentEmail, password },
-        auth: false,
-      });
-      setToken(result.token);
-      setEmail(result.user.email);
-    } catch (exception) {
-      setError(exception instanceof Error ? exception.message : 'No pudimos iniciar sesión.');
-      throw exception;
-    } finally {
-      setIsAuthenticating(false);
-    }
-  }, [isAuthenticating]);
+  const authenticate = useCallback(
+    async (path: '/auth/login' | '/auth/register', currentEmail: string, password: string) => {
+      if (isAuthenticating) return;
+      setIsAuthenticating(true);
+      setError(null);
+      try {
+        const result = await apiRequest<{ token: string; user: { email: string } }>(path, {
+          method: 'POST',
+          body: { email: currentEmail, password },
+          auth: false,
+        });
+        setToken(result.token);
+        setEmail(result.user.email);
+      } catch (exception) {
+        setError(exception instanceof Error ? exception.message : 'No pudimos iniciar sesión.');
+        throw exception;
+      } finally {
+        setIsAuthenticating(false);
+      }
+    },
+    [isAuthenticating],
+  );
 
-  const login = useCallback((currentEmail: string, password: string) => authenticate('/auth/login', currentEmail, password), [authenticate]);
-  const register = useCallback((currentEmail: string, password: string) => authenticate('/auth/register', currentEmail, password), [authenticate]);
+  const login = useCallback(
+    (currentEmail: string, password: string) => authenticate('/auth/login', currentEmail, password),
+    [authenticate],
+  );
+  const register = useCallback(
+    (currentEmail: string, password: string) => authenticate('/auth/register', currentEmail, password),
+    [authenticate],
+  );
 
   const logout = useCallback(() => {
     setToken(null);

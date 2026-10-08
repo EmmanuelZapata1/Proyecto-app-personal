@@ -55,29 +55,37 @@ export function NotesProvider({ children }: PropsWithChildren) {
     setNotes((current) => [result.note, ...current]);
   }, []);
 
-  const updateNote = useCallback(async (id: string, body: string) => {
-    const trimmedBody = body.trim();
-    if (!trimmedBody) throw new Error('Una nota no puede quedar vacía.');
-    const previous = notes;
-    setNotes((current) => current.map((note) => (note.id === id ? { ...note, body: trimmedBody, updatedAt: new Date().toISOString() } : note)));
-    try {
-      await apiRequest(`/api/notes/${id}`, { method: 'PATCH', body: { body: trimmedBody } });
-    } catch (exception) {
-      setNotes(previous);
-      throw exception;
-    }
-  }, [notes]);
+  const updateNote = useCallback(
+    async (id: string, body: string) => {
+      const trimmedBody = body.trim();
+      if (!trimmedBody) throw new Error('Una nota no puede quedar vacía.');
+      const previous = notes;
+      setNotes((current) =>
+        current.map((note) => (note.id === id ? { ...note, body: trimmedBody, updatedAt: new Date().toISOString() } : note)),
+      );
+      try {
+        await apiRequest(`/api/notes/${id}`, { method: 'PATCH', body: { body: trimmedBody } });
+      } catch (exception) {
+        setNotes(previous);
+        throw exception;
+      }
+    },
+    [notes],
+  );
 
-  const removeNote = useCallback(async (id: string) => {
-    const previous = notes;
-    setNotes((current) => current.filter((note) => note.id !== id));
-    try {
-      await apiRequest(`/api/notes/${id}`, { method: 'DELETE' });
-    } catch (exception) {
-      setNotes(previous);
-      throw exception;
-    }
-  }, [notes]);
+  const removeNote = useCallback(
+    async (id: string) => {
+      const previous = notes;
+      setNotes((current) => current.filter((note) => note.id !== id));
+      try {
+        await apiRequest(`/api/notes/${id}`, { method: 'DELETE' });
+      } catch (exception) {
+        setNotes(previous);
+        throw exception;
+      }
+    },
+    [notes],
+  );
 
   const value = useMemo(
     () => ({ notes, isReady, error, createNote, updateNote, removeNote }),

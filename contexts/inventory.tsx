@@ -63,30 +63,36 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     setItems((current) => [...current, result.item]);
   }, []);
 
-  const updateItem = useCallback(async (id: string, { kind, name, detail, renewsOn }: NewInventoryItem) => {
-    const trimmedName = name.trim();
-    if (!trimmedName) throw new Error('El nombre no puede quedar vacío.');
-    const previous = items;
-    const next: InventoryItem = { id, kind, name: trimmedName, detail: detail?.trim() || null, renewsOn: renewsOn || null };
-    setItems((current) => current.map((item) => (item.id === id ? next : item)));
-    try {
-      await apiRequest(`/api/inventory/${id}`, { method: 'PATCH', body: next });
-    } catch (exception) {
-      setItems(previous);
-      throw exception;
-    }
-  }, [items]);
+  const updateItem = useCallback(
+    async (id: string, { kind, name, detail, renewsOn }: NewInventoryItem) => {
+      const trimmedName = name.trim();
+      if (!trimmedName) throw new Error('El nombre no puede quedar vacío.');
+      const previous = items;
+      const next: InventoryItem = { id, kind, name: trimmedName, detail: detail?.trim() || null, renewsOn: renewsOn || null };
+      setItems((current) => current.map((item) => (item.id === id ? next : item)));
+      try {
+        await apiRequest(`/api/inventory/${id}`, { method: 'PATCH', body: next });
+      } catch (exception) {
+        setItems(previous);
+        throw exception;
+      }
+    },
+    [items],
+  );
 
-  const removeItem = useCallback(async (id: string) => {
-    const previous = items;
-    setItems((current) => current.filter((item) => item.id !== id));
-    try {
-      await apiRequest(`/api/inventory/${id}`, { method: 'DELETE' });
-    } catch (exception) {
-      setItems(previous);
-      throw exception;
-    }
-  }, [items]);
+  const removeItem = useCallback(
+    async (id: string) => {
+      const previous = items;
+      setItems((current) => current.filter((item) => item.id !== id));
+      try {
+        await apiRequest(`/api/inventory/${id}`, { method: 'DELETE' });
+      } catch (exception) {
+        setItems(previous);
+        throw exception;
+      }
+    },
+    [items],
+  );
 
   const value = useMemo(
     () => ({ items, isReady, error, createItem, updateItem, removeItem }),

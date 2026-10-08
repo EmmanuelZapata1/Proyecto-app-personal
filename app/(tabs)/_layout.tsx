@@ -31,10 +31,9 @@ export default function TabLayout() {
           paddingTop: 8,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
-        tabBarIcon: ({ color, size }) => (
-          <Ionicons color={color} name={iconByRoute[route.name]} size={size} />
-        ),
-      })}>
+        tabBarIcon: ({ color, size }) => <Ionicons color={color} name={iconByRoute[route.name]} size={size} />,
+      })}
+    >
       <Tabs.Screen name="index" options={{ title: 'Hoy' }} />
       <Tabs.Screen name="organize" options={{ title: 'Organizar' }} />
       <Tabs.Screen name="news" options={{ title: 'Noticias' }} />

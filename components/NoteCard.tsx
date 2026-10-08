@@ -10,8 +10,15 @@ export function NoteCard({ note, onRemove }: { note: Note; onRemove: () => void 
     <View style={styles.card}>
       <Text style={styles.body}>{note.body}</Text>
       <View style={styles.footer}>
-        <Text style={styles.meta}>{edited ? 'Editada' : 'Guardada'} · {formatDate(note.updatedAt)}</Text>
-        <Pressable accessibilityLabel={`Eliminar nota: ${note.body.slice(0, 40)}`} hitSlop={8} onPress={onRemove} style={({ pressed }) => [styles.remove, pressed && styles.pressed]}>
+        <Text style={styles.meta}>
+          {edited ? 'Editada' : 'Guardada'} · {formatDate(note.updatedAt)}
+        </Text>
+        <Pressable
+          accessibilityLabel={`Eliminar nota: ${note.body.slice(0, 40)}`}
+          hitSlop={8}
+          onPress={onRemove}
+          style={({ pressed }) => [styles.remove, pressed && styles.pressed]}
+        >
           <Ionicons name="trash-outline" color={colors.muted} size={18} />
         </Pressable>
       </View>

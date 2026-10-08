@@ -58,29 +58,35 @@ export function TasksProvider({ children }: PropsWithChildren) {
     setTasks((current) => [result.task, ...current]);
   }, []);
 
-  const toggleTask = useCallback(async (id: string) => {
-    const task = tasks.find((item) => item.id === id);
-    if (!task) return;
-    const completed = !task.completed;
-    setTasks((current) => current.map((item) => (item.id === id ? { ...item, completed } : item)));
-    try {
-      await apiRequest(`/api/tasks/${id}`, { method: 'PATCH', body: { completed } });
-    } catch (exception) {
-      setTasks((current) => current.map((item) => (item.id === id ? { ...item, completed: !completed } : item)));
-      throw exception;
-    }
-  }, [tasks]);
+  const toggleTask = useCallback(
+    async (id: string) => {
+      const task = tasks.find((item) => item.id === id);
+      if (!task) return;
+      const completed = !task.completed;
+      setTasks((current) => current.map((item) => (item.id === id ? { ...item, completed } : item)));
+      try {
+        await apiRequest(`/api/tasks/${id}`, { method: 'PATCH', body: { completed } });
+      } catch (exception) {
+        setTasks((current) => current.map((item) => (item.id === id ? { ...item, completed: !completed } : item)));
+        throw exception;
+      }
+    },
+    [tasks],
+  );
 
-  const removeTask = useCallback(async (id: string) => {
-    const previous = tasks;
-    setTasks((current) => current.filter((item) => item.id !== id));
-    try {
-      await apiRequest(`/api/tasks/${id}`, { method: 'DELETE' });
-    } catch (exception) {
-      setTasks(previous);
-      throw exception;
-    }
-  }, [tasks]);
+  const removeTask = useCallback(
+    async (id: string) => {
+      const previous = tasks;
+      setTasks((current) => current.filter((item) => item.id !== id));
+      try {
+        await apiRequest(`/api/tasks/${id}`, { method: 'DELETE' });
+      } catch (exception) {
+        setTasks(previous);
+        throw exception;
+      }
+    },
+    [tasks],
+  );
 
   const value = useMemo(
     () => ({ tasks, isReady, error, createTask, toggleTask, removeTask }),
