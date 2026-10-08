@@ -16,7 +16,7 @@ The primary user is the developer who owns this project. They use the app throug
 
 ## Product Purpose
 
-This is a personal, mobile-first command center for everyday planning and a developer's technical ecosystem. Success means it becomes useful before a server or account is required.
+This is a personal, mobile-first command center for everyday planning and a developer's technical ecosystem. Success means it is the first place the owner checks during the day.
 
 ## Positioning
 
@@ -29,17 +29,17 @@ The app is used in short, frequent sessions on a phone: checking the day, captur
 ## Capabilities and Constraints
 
 - Initial scope: tasks, daily priorities, notes, habits, reminders, RSS news, and manual inventories for projects, software, hardware, and renewals.
-- Initial data model: local-first with SQLite; account and sync are deliberately deferred.
+- Data model: server-first. An Express API with PostgreSQL stores each user's data behind an email/password account. An on-device cache for offline reading is planned (phase 1); full local-first sync is deferred.
 - Android and iOS are targets. Android is the first practical test target.
 - Deferred: secrets storage, permanent computer telemetry, server administration, finance, and social features.
 
 ## Evidence on Hand
 
-No existing product assets, production data, or visual identity are available. Dashboard values in the first build are clearly illustrative.
+No existing product assets, production data, or visual identity are available. Dashboard values come from real data; features that don't work yet are hidden rather than shown as placeholders.
 
 ## Product Principles
 
 1. Make the next useful action obvious.
 2. Capture information faster than opening a separate app.
-3. Work offline by default and keep personal data understandable.
+3. Stay readable without a connection and keep personal data understandable.
 4. Treat technical information as practical life context, not enterprise administration.
